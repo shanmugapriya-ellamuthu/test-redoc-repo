@@ -1,0 +1,169 @@
+swagger: '2.0'
+info:
+  title: Elastic Search API
+  version: v1.0
+  description: >
+    # Overview
+    TORIS is an ecosystem to integrate transportation application entities into TOR and propagate them
+    into VI, IRIS, MyMedia and so on. TFM (Trimble Fleet Manager) is one of transportation
+    application which uses TORIS to store the data in TOR and propagate them to IRIS.
+    TORIS ES API 1.0 provides operations like:
+    * **Device APIs** - Device API allow users to get the Device installed Vehicle
+    with device serial number.
+    # Basepath URL
+    **Stage** -```https://api-stg.trimble.com/t/trimble.com/toris-es-api-stg/1.0```
+    # Authorization
+    The service will be secured through API Cloud. Thus requiring an
+    'Authorization' header in all requests. The value of the header can be
+    either picked up from APICloud which will be an OAuth2 Bearer token or you
+    can use the Trimble Identity /token endpoint. You have to send a valid
+    ```Access Token``` in the Authorization header, using the ```Bearer```
+    authentication scheme.
+host: api-stg.trimble.com
+basePath: /t/trimble.com/toris-es-api-stg/1.0
+schemes:
+  - https
+tags:
+  - name: Device APIs
+    description: >-
+      Search Device by DSN or with Namespace of a Device
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /devices:
+    get:
+      tags:
+        - Device APIs
+      summary: Retrieve device information using DSN
+      description: >-
+        Use this API view a device information along with the information about the vehicle it is installed
+      operationId: getDeviceByDSN
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: deviceSerialNumber
+          in: query
+          description: Serial Number of the device to be searched
+          required: true
+          type: string
+        - name: usedBy
+          in: query
+          description: >-
+            Application name where the device is being used
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Device details of the given DSN.
+          schema:
+            $ref: '#/definitions/deviceSuccessResponse'
+          examples:
+            application/json:
+                - lifeState: ACTV
+                  'torId ': 'trn: tts: or::ttm - stg: 10813: SENSORS: f8afebfe - 48 c4 - 11 ea - 9
+                    ee0 - 023e4652 a5b6 '
+                  createdTimeStamp: '2020-02-06T09:42:21.129Z'
+                  updatedTimeStamp: '2020-02-06T09:54:22.764Z'
+                  torAccountId: trn:tts:or::ttm-stg:10813:ACCOUNTS:8a93a72e-2203-11ea-b480-023e4652a5b6
+                  source:
+                    cfc:
+                      customerPfmId: 57
+                      orgUnits: []
+                      customerId: 1000277
+                      vehicleNumber: '7000142'
+                      vin: ''
+                      vehicleId: 1556
+                      vehiclePfmId: 72076
+                      deviceId: 2037
+                      status: ACTV
+                  ownedBy: cfc
+                  usedBy:
+                    - cfc
+                  deviceSerialNumber: '7000142'
+                  deviceIdentity: flex:pmg:7000142
+        '401':
+          description: Unauthorized
+          examples:
+            application/json:
+              fault:
+                code: 900902
+                message: Authentication Failure
+                description: Missing Credentials
+definitions:
+  deviceSuccessResponse:
+    type: object
+    properties:
+      lifeState:
+        type: string
+        enum:
+          - ACTV
+          - INACTV
+          - DELETED
+        description: The status of an entity in TOR.
+      torId:
+        type: string
+        maxLength: 100
+        description: The TOR unique Id of a Device.
+      createdTimeStamp:
+        type: string
+        description: UTC timestamp in ISO8601 format. The date and time of when an entity is created in TOR
+      updatedTimeStamp:
+        type: string
+        description: >-
+          UTC timestamp in ISO8601 format. The date and time of when an entity is last updated in TOR
+      torAccountId:
+        type: string
+        description:
+          The tId of an account in TOR. This is used to identify the customer of the entity.
+        maxLength: 100
+      source:
+        properties:
+          cfc:
+            properties:
+              customerPfmId:
+                type: integer
+                description: The pfm id of a customer.
+              orgUnits:
+                type: array
+                description: The list of organizationalunit ids under which the entity is assigned in PFM.
+              customerId:
+                type: integer
+                description: The enterprise data id of a customer.
+              vehicleNumber:
+                type: string
+                description: The friendly name or a number of a vehicle to easily identify the vehicle.
+              vin:
+                type: string
+                description: Vehicle Identification Number is a unique code used in the automotive industry.
+              vehicleId:
+                type: integer
+                description: The enterprise data id of a vehicle. This is used to identify the vehicle on which the device is being installed.
+              vehiclePfmId:
+                type: integer
+                description: The pfm id of a vehicle.
+              deviceId:
+                type: integer
+                description: The enterprise data id of a device.
+              status:
+                type: string
+                enum:
+                  - ACTV
+                  - INACTV
+                  - DELETED
+                description: The status of a device entity in the pfm  application.
+      ownedBy:
+        type: string
+        description: The owner of an entity. When an entity is shared by multiple applications, this attribute will have only one value by which this entity is created in TOR first.
+      usedBy:
+        type: string
+        description: The list of applications who are sharing this entity.
+      deviceSerialNumber:
+        type: string
+        description: The serial number of a device.
+      deviceIdentity:
+        type: string
+        description: The namespace of a device for global uniqueness. The default format is "manufacturer":"model":"dsn".
