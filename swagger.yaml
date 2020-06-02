@@ -1,8 +1,13 @@
 swagger: '2.0'
+schemes:
+  - http
+  - https
+host: api-stg.trimble.com
+basePath: /t/trimble.com/toris-es-api-stg/1.0
 info:
   title: Elastic Search API
   version: v1.0
-  description: >
+  description: |
     # Overview
     TORIS is an ecosystem to integrate transportation application entities into TOR and propagate them
     into VI, IRIS, MyMedia and so on. TFM (Trimble Fleet Manager) is one of transportation
@@ -19,13 +24,9 @@ info:
     can use the Trimble Identity /token endpoint. You have to send a valid
     ```Access Token``` in the Authorization header, using the ```Bearer```
     authentication scheme.
-host: api-stg.trimble.com
-basePath: /t/trimble.com/toris-es-api-stg/1.0
-schemes:
-  - https
 tags:
   - name: Device APIs
-    description: >-
+    description: |
       Search Device by DSN or with Namespace of a Device
 consumes:
   - application/json
@@ -37,7 +38,7 @@ paths:
       tags:
         - Device APIs
       summary: Retrieve device information using DSN
-      description: >-
+      description: |
         Use this API view a device information along with the information about the vehicle it is installed
       operationId: getDeviceByDSN
       consumes:
@@ -52,7 +53,7 @@ paths:
           type: string
         - name: usedBy
           in: query
-          description: >-
+          description: |
             Application name where the device is being used
           required: true
           type: string
@@ -113,7 +114,7 @@ definitions:
         description: UTC timestamp in ISO8601 format. The date and time of when an entity is created in TOR
       updatedTimeStamp:
         type: string
-        description: >-
+        description: |
           UTC timestamp in ISO8601 format. The date and time of when an entity is last updated in TOR
       torAccountId:
         type: string
