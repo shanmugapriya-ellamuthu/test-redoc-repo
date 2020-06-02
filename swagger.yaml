@@ -1,33 +1,47 @@
 swagger: '2.0'
-schemes:
-  - http
-  - https
-host: api-stg.trimble.com
-basePath: /t/trimble.com/toris-es-api-stg/1.0
 info:
   title: Elastic Search API
   version: v1.0
   description: |
     # Overview
+
     TORIS is an ecosystem to integrate transportation application entities into TOR and propagate them
     into VI, IRIS, MyMedia and so on. TFM (Trimble Fleet Manager) is one of transportation
     application which uses TORIS to store the data in TOR and propagate them to IRIS.
+
     TORIS ES API 1.0 provides operations like:
+
     * **Device APIs** - Device API allow users to get the Device installed Vehicle
     with device serial number.
+
     # Basepath URL
-    **Stage** -```https://api-stg.trimble.com/t/trimble.com/toris-es-api-stg/1.0```
+
+    **dev** - ```https://api-stg.trimble.com/t/trimble.com/toris-es-api-dev/1.0```
+
+
+    **qa** - ```https://api-stg.trimble.com/t/trimble.com/toris-es-api-qa/1.0```
+
+
+    **Stage** - ```https://api-stg.trimble.com/t/trimble.com/toris-es-api-stg/1.0```
+
     # Authorization
+
     The service will be secured through API Cloud. Thus requiring an
     'Authorization' header in all requests. The value of the header can be
     either picked up from APICloud which will be an OAuth2 Bearer token or you
     can use the Trimble Identity /token endpoint. You have to send a valid
     ```Access Token``` in the Authorization header, using the ```Bearer```
     authentication scheme.
+
+    Format: ```Bearer <access_token>```
+host: api-stg.trimble.com
+basePath: /t/trimble.com/toris-es-api-stg/1.0
+schemes:
+  - https
 tags:
   - name: Device APIs
     description: |
-      Search Device by DSN or with Namespace of a Device
+       Search APIs for Devices
 consumes:
   - application/json
 produces:
@@ -37,7 +51,7 @@ paths:
     get:
       tags:
         - Device APIs
-      summary: Retrieve device information using DSN
+      summary: Retrieve all devices or filter by using deviceSerialNumber or deviceIdentity or usedBy or Size
       description: |
         Use this API view a device information along with the information about the vehicle it is installed
       operationId: getDeviceByDSN
@@ -49,13 +63,22 @@ paths:
         - name: deviceSerialNumber
           in: query
           description: Serial Number of the device to be searched
-          required: true
+          required: false
           type: string
         - name: usedBy
           in: query
-          description: |
-            Application name where the device is being used
-          required: true
+          description: Application name where the device is being used
+          required: false
+          type: string
+        - name: deviceIdentity
+          in: query
+          description: Device Identity of the device
+          required: false
+          type: string
+        - name: size
+          in: query
+          description: Number of records to be fetched
+          required: false
           type: string
       responses:
         '200':
@@ -65,8 +88,7 @@ paths:
           examples:
             application/json:
                 - lifeState: ACTV
-                  'torId ': 'trn: tts: or::ttm - stg: 10813: SENSORS: f8afebfe - 48 c4 - 11 ea - 9
-                    ee0 - 023e4652 a5b6 '
+                  'torId ': 'trn:tts:or::ttm-stg:10813:SENSORS:f8afebfe-48c4-11ea-9ee0-023e4652a5b6'
                   createdTimeStamp: '2020-02-06T09:42:21.129Z'
                   updatedTimeStamp: '2020-02-06T09:54:22.764Z'
                   torAccountId: trn:tts:or::ttm-stg:10813:ACCOUNTS:8a93a72e-2203-11ea-b480-023e4652a5b6
@@ -88,13 +110,71 @@ paths:
                   deviceIdentity: flex:pmg:7000142
         '401':
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/TidErrorMessage'
+  /devices/{deviceTorId}:
+    get:
+      tags:
+        - Device APIs
+      summary: Get Device by torId
+      description: Use this API to get the device by torId
+      operationId: getDeviceByTorId
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: deviceTorId
+          in: path
+          description: Device torId
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Device details of the given DSN.
+          schema:
+            $ref: '#/definitions/deviceSuccessResponse'
           examples:
             application/json:
-              fault:
-                code: 900902
-                message: Authentication Failure
-                description: Missing Credentials
+              - lifeState: ACTV
+                'torId ': 'trn:tts:or::ttm-stg:10813:SENSORS:f8afebfe-48c4-11ea-9ee0-023e4652a5b6'
+                createdTimeStamp: '2020-02-06T09:42:21.129Z'
+                updatedTimeStamp: '2020-02-06T09:54:22.764Z'
+                torAccountId: trn:tts:or::ttm-stg:10813:ACCOUNTS:8a93a72e-2203-11ea-b480-023e4652a5b6
+                source:
+                  cfc:
+                    customerPfmId: 57
+                    orgUnits: []
+                    customerId: 1000277
+                    vehicleNumber: '7000142'
+                    vin: ''
+                    vehicleId: 1556
+                    vehiclePfmId: 72076
+                    deviceId: 2037
+                    status: ACTV
+                ownedBy: cfc
+                usedBy:
+                  - cfc
+                deviceSerialNumber: '7000142'
+                deviceIdentity: flex:pmg:7000142
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/TidErrorMessage'
 definitions:
+  TidErrorMessage:
+    type: object
+    properties:
+      fault:
+        type: integer
+        format: int32
+        default: 900902
+      message:
+        type: string
+        default: Authentication Failure
+      description:
+        type: string
+        default: Missing Credentials
   deviceSuccessResponse:
     type: object
     properties:
@@ -114,8 +194,7 @@ definitions:
         description: UTC timestamp in ISO8601 format. The date and time of when an entity is created in TOR
       updatedTimeStamp:
         type: string
-        description: |
-          UTC timestamp in ISO8601 format. The date and time of when an entity is last updated in TOR
+        description: UTC timestamp in ISO8601 format. The date and time of when an entity is last updated in TOR
       torAccountId:
         type: string
         description:
